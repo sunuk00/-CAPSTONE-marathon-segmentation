@@ -13,6 +13,8 @@
 | exp02b_bce_iou_posw | 26-03-28 | `src/train_unet_bce_iou.py` | BCE(pos_weight=10) + Soft IoU (0.5/0.5) | 512, batch 4, 30ep | **0.1547** | **0.0916** | 개선 확인 |
 | exp03_bce03_iou07_posw | 26-03-28 | `src/train_unet_bce_iou.py` | BCE(0.3) + Soft IoU(0.7) + pos_weight=10 | 512, batch 4, 30ep | **0.1759** | **0.1028** | 추가 개선 확인 |
 | exp03b_bce05_iou05_posw20 | 26-03-28 | `src/train_unet_bce_iou.py` | BCE(0.5) + Soft IoU(0.5) + pos_weight=20 | 512, batch 4, 30ep | **0.1616** | **0.0945** | 개선 확인 (exp03 대비 낮음) |
+| exp04_bce_dice_posw10 | 26-03-28 | `src/train_unet_bce_dice.py` | BCE(0.5) + Soft Dice(0.5) + pos_weight=10 | 512, batch 4, 30ep | **0.1529** | **0.0894** | 개선 확인 |
+| exp04b_bce03_dice07_posw10 | 26-03-28 | `src/train_unet_bce_dice.py` | BCE(0.3) + Soft Dice(0.7) + pos_weight=10 | 512, batch 4, 30ep | **0.1470** | **0.0870** | 개선 확인 (exp04 대비 낮음) |
 
 ### 2. Key Findings
 
@@ -27,37 +29,38 @@
   - best checkpoint: epoch 28 (Val Dice 0.1759, Val IoU 0.1028)
 5. `pos_weight`를 20으로 올린 0.5/0.5 실험도 개선은 있으나 최고점은 0.1616
   - exp03(0.1759)에는 미달, 다만 0.5/0.5 계열 대비 안정적 개선 확인
+6. BCE+Dice(0.5/0.5, pos_weight=10)도 학습은 안정적으로 진행
+  - best checkpoint: epoch 29 (Val Dice 0.1529, Val IoU 0.0894)
+7. BCE+Dice(0.3/0.7, pos_weight=10)는 동작하나, 현재 로그 기준 0.5/0.5보다 낮음
+  - 관측 최고 Val Dice 0.1470, Val IoU 0.0870
 
-### 3. Latest Run (exp04_bce05_iou05_posw20)
+### 3. Latest Run (exp05_bce03_dice07_posw10)
 
 실행 명령
 
 ```powershell
-python .\src\train_unet_bce_iou.py --bce-weight 0.5 --iou-weight 0.5 --pos-weight 20 --epochs 30 --image-size 512
+python .\src\train_unet_bce_dice.py --bce-weight 0.3 --dice-weight 0.7 --pos-weight 10 --epochs 30 --image-size 512
 ```
 
 학습 후반 로그 (이번 실행)
 
 ```text
-Epoch 020/30 | Train Loss: 0.5480, Train Dice: 0.1915, Train IoU: 0.1138 | Val Loss: 0.5492, Val Dice: 0.1431, Val IoU: 0.0815
-Saved best checkpoint: outputs\unet_bce_iou\best_unet.pt (val_dice=0.1431)
-Epoch 021/30 | Train Loss: 0.5456, Train Dice: 0.1803, Train IoU: 0.1052 | Val Loss: 0.5545, Val Dice: 0.0734, Val IoU: 0.0400
-Epoch 022/30 | Train Loss: 0.5433, Train Dice: 0.1808, Train IoU: 0.1060 | Val Loss: 0.5437, Val Dice: 0.1276, Val IoU: 0.0722
-Epoch 023/30 | Train Loss: 0.5403, Train Dice: 0.1976, Train IoU: 0.1166 | Val Loss: 0.5451, Val Dice: 0.1246, Val IoU: 0.0707
-Epoch 024/30 | Train Loss: 0.5342, Train Dice: 0.2077, Train IoU: 0.1237 | Val Loss: 0.5402, Val Dice: 0.1359, Val IoU: 0.0791
-Epoch 025/30 | Train Loss: 0.5310, Train Dice: 0.2134, Train IoU: 0.1270 | Val Loss: 0.5383, Val Dice: 0.1354, Val IoU: 0.0794
-Epoch 026/30 | Train Loss: 0.5287, Train Dice: 0.2020, Train IoU: 0.1188 | Val Loss: 0.5376, Val Dice: 0.1230, Val IoU: 0.0726
-Epoch 027/30 | Train Loss: 0.5268, Train Dice: 0.2201, Train IoU: 0.1312 | Val Loss: 0.5339, Val Dice: 0.1317, Val IoU: 0.0752
-Epoch 028/30 | Train Loss: 0.5253, Train Dice: 0.2209, Train IoU: 0.1327 | Val Loss: 0.5322, Val Dice: 0.1430, Val IoU: 0.0821
-Epoch 029/30 | Train Loss: 0.5222, Train Dice: 0.2146, Train IoU: 0.1271 | Val Loss: 0.5288, Val Dice: 0.1616, Val IoU: 0.0945
-Saved best checkpoint: outputs\unet_bce_iou\best_unet.pt (val_dice=0.1616)
+Epoch 024/30 | Train Loss: 0.6829, Train Dice: 0.2125, Train IoU: 0.1270 | Val Loss: 0.7018, Val Dice: 0.1373, Val IoU: 0.0809
+Saved best checkpoint: outputs\unet_bce_dice\best_unet.pt (val_dice=0.1373)
+Epoch 025/30 | Train Loss: 0.6755, Train Dice: 0.2163, Train IoU: 0.1304 | Val Loss: 0.6979, Val Dice: 0.1430, Val IoU: 0.0838
+Saved best checkpoint: outputs\unet_bce_dice\best_unet.pt (val_dice=0.1430)
+Epoch 026/30 | Train Loss: 0.6715, Train Dice: 0.2150, Train IoU: 0.1278 | Val Loss: 0.7004, Val Dice: 0.1149, Val IoU: 0.0676
+Epoch 027/30 | Train Loss: 0.6636, Train Dice: 0.2384, Train IoU: 0.1442 | Val Loss: 0.6833, Val Dice: 0.1281, Val IoU: 0.0744
+Epoch 028/30 | Train Loss: 0.6609, Train Dice: 0.2166, Train IoU: 0.1297 | Val Loss: 0.7019, Val Dice: 0.1046, Val IoU: 0.0598
+Epoch 029/30 | Train Loss: 0.6494, Train Dice: 0.2448, Train IoU: 0.1474 | Val Loss: 0.6986, Val Dice: 0.1049, Val IoU: 0.0599
+Epoch 030/30 | Train Loss: 0.6406, Train Dice: 0.2456, Train IoU: 0.1492 | Val Loss: 0.6796, Val Dice: 0.1470, Val IoU: 0.0870
 ```
 
 해석
 
-1. pos_weight=20 적용으로 0.5/0.5 설정에서도 best Val Dice 0.1616까지 상승
-2. 최고 성능은 epoch 29에서 관찰 (Val IoU 0.0945)
-3. 전체 최고 기록은 여전히 exp03(0.3/0.7, Dice 0.1759)이므로, 현재 best checkpoint 기준은 exp03 유지가 합리적
+1. BCE+Dice(0.3/0.7, pos_weight=10) 설정에서 관측 최고 Val Dice 0.1470
+2. 이번 실행에서는 후반 변동성이 커서 epoch별 성능 편차가 큼
+3. BCE+Dice 계열 내에서는 이전 exp04(0.1529)가 더 높고, 전체 최고는 여전히 exp03(0.1759)
 
 ### 4. Current File Structure (Training/Inference)
 
@@ -68,12 +71,17 @@ Saved best checkpoint: outputs\unet_bce_iou\best_unet.pt (val_dice=0.1616)
   - Train: `src/train_unet_bce_iou.py`
   - Predict: `src/predict_unet_bce_iou.py`
   - Output: `outputs/unet_bce_iou`
+3. BCE+Dice 계열
+  - Train: `src/train_unet_bce_dice.py`
+  - Output: `outputs/unet_bce_dice`
 
 ### 5. Next Minimal Experiments
 
-1. `pos_weight` sweep
-  - 15, 20, 25 비교
-2. inference threshold sweep
+1. BCE+Dice 가중치 sweep
+  - 0.5/0.5, 0.4/0.6, 0.3/0.7 비교
+2. BCE+Dice `pos_weight` sweep
+  - 10, 15, 20 비교
+3. inference threshold sweep
   - 0.35, 0.4, 0.45, 0.5 비교
-3. 0.5/0.5 + pos_weight=20 설정 2회 재학습
+4. BCE+Dice (0.3/0.7) 설정 2회 재학습
   - seed 고정 상태에서 변동성 확인
