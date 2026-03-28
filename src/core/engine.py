@@ -17,7 +17,7 @@ class EpochStats:
     dice: float
     iou: float
 
-
+# 단일 epoch 동안 모델을 학습 또는 평가하는 함수
 def run_epoch(
     model: nn.Module,
     loader: DataLoader,

@@ -83,8 +83,8 @@ def visualize_augmentation_samples(
         axes[1, col].axis("off")
 
     plt.tight_layout()
-    plt.savefig("augmentation_visualization.png", dpi=100, bbox_inches="tight")
-    print(f"✓ Visualization saved to augmentation_visualization.png")
+    # plt.savefig("augmentation_visualization.png", dpi=100, bbox_inches="tight")
+    # print(f"✓ Visualization saved to augmentation_visualization.png")
     plt.show()
 
 
