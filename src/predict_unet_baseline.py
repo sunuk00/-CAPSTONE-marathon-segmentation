@@ -32,19 +32,31 @@ def load_mask(mask_path: Path, image_size: int) -> torch.Tensor:
     return torch.from_numpy(mask_arr).unsqueeze(0).unsqueeze(0)
 
 
-def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run U-Net baseline inference on test images")
-    parser.add_argument("--checkpoint", type=str, default="outputs/unet_baseline/best_unet.pt")
+def build_arg_parser(
+    description: str = "Run U-Net baseline inference on test images",
+    default_checkpoint: str = "outputs/unet_baseline/best_unet.pt",
+    default_output_dir: str = "outputs/unet_baseline/test_predictions",
+) -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("--checkpoint", type=str, default=default_checkpoint)
     parser.add_argument("--test-root", type=str, default="data/test")
     parser.add_argument("--image-size", type=int, default=0)
     parser.add_argument("--threshold", type=float, default=0.5)
-    parser.add_argument("--output-dir", type=str, default="outputs/unet_baseline/test_predictions")
+    parser.add_argument("--output-dir", type=str, default=default_output_dir)
     return parser
 
 
-def main() -> None:
+def main(
+    description: str = "Run U-Net baseline inference on test images",
+    default_checkpoint: str = "outputs/unet_baseline/best_unet.pt",
+    default_output_dir: str = "outputs/unet_baseline/test_predictions",
+) -> None:
     # 1) Read runtime arguments.
-    args = build_arg_parser().parse_args()
+    args = build_arg_parser(
+        description=description,
+        default_checkpoint=default_checkpoint,
+        default_output_dir=default_output_dir,
+    ).parse_args()
     checkpoint_path = Path(args.checkpoint)
 
     if not checkpoint_path.exists():

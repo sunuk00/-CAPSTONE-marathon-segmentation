@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 
@@ -213,6 +214,48 @@ def iou_score_from_logits(logits: torch.Tensor, target: torch.Tensor, eps: float
     return iou.mean()
 
 
+# Soft IoU loss for training (differentiable). Thresholding을 쓰지 않고 확률값 그대로 사용함.
+def soft_iou_loss_from_logits(logits: torch.Tensor, target: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
+    probs = torch.sigmoid(logits)
+
+    probs = probs.view(probs.size(0), -1)
+    target = target.view(target.size(0), -1)
+
+    intersection = (probs * target).sum(dim=1)
+    union = probs.sum(dim=1) + target.sum(dim=1) - intersection
+    iou = (intersection + eps) / (union + eps)
+    return 1.0 - iou.mean()
+
+
+class BCEIoULoss(nn.Module):
+    # 첫 실험을 단순화하기 위해 BCE와 IoU를 0.5:0.5로 고정
+    def __init__(
+        self,
+        # Todo: bce랑 iou의 Loss 비율 조정하면서 성능 향상 시도해보기 - 예를 들어, bce_weight=0.5, iou_weight=0.5로 설정하여 두 손실이 동일한 비중으로 모델 학습에 기여하도록 할 수 있음
+        bce_weight: float = 0.5, 
+        iou_weight: float = 0.5,
+
+        # Todo: pos_weight 조정하면서 성능 향상 시도해보기 - 예를 들어, pos_weight=10.0으로 설정하여 경로 픽셀의 오차가 배경 픽셀보다 10배 더 크게 반영되도록 할 수 있음 - 이렇게 하면 모델이 경로 픽셀을 더 잘 학습하도록 도와줄 수 있음
+        pos_weight: float = 10.0,
+    ) -> None:
+        super().__init__()
+        self.bce_weight = bce_weight
+        self.iou_weight = iou_weight
+        # pos_weight는 양성(경로) 픽셀을 더 크게 벌주기 위한 가중치
+        # foreground가 매우 희소할 때(현재 데이터처럼) BCE가 배경 위주로 학습되는 것을 완화함
+        self.register_buffer("pos_weight", torch.tensor([pos_weight], dtype=torch.float32))
+
+    def forward(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        # logits와 같은 device/dtype으로 맞춰서 CPU/GPU 혼용 에러를 방지
+        pos_weight = self.pos_weight.to(device=logits.device, dtype=logits.dtype)
+        bce_loss = F.binary_cross_entropy_with_logits(
+            logits,
+            target,
+            pos_weight=pos_weight,
+        )
+        iou_loss = soft_iou_loss_from_logits(logits, target)
+        return self.bce_weight * bce_loss + self.iou_weight * iou_loss
+
 @dataclass
 class EpochStats:
     loss: float
@@ -271,16 +314,19 @@ def run_epoch(
 
 # Argument 설정
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="U-Net baseline training for marathon path segmentation")
+    parser = argparse.ArgumentParser(description="U-Net training with BCE + Soft IoU loss for marathon path segmentation")
     parser.add_argument("--data-root", type=str, default="data/train")
     parser.add_argument("--image-size", type=int, default=256)
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--val-ratio", type=float, default=0.2)
+    parser.add_argument("--bce-weight", type=float, default=0.5)
+    parser.add_argument("--iou-weight", type=float, default=0.5)
+    parser.add_argument("--pos-weight", type=float, default=10.0)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num-workers", type=int, default=0)
-    parser.add_argument("--output-dir", type=str, default="outputs/unet_baseline")
+    parser.add_argument("--output-dir", type=str, default="outputs/unet_bce_iou")
     return parser
 
 
@@ -343,9 +389,19 @@ def main() -> None:
         print("Using device: CPU")
     model = UNet().to(device)
 
+
     # 정답 마스크와 AI가 예측한 결과를 비교하여 Loss를 계산하는 함수
-    # baseline은 BCEWithLogitsLoss 단독으로 유지
-    criterion = nn.BCEWithLogitsLoss()
+    # 첫 실험 변경: BCE 단독 대신 BCE + Soft IoU 조합으로 학습함
+    # pos_weight를 사용해 경로(양성) 픽셀 오차를 더 크게 반영
+    criterion = BCEIoULoss(
+        bce_weight=args.bce_weight,
+        iou_weight=args.iou_weight,
+        pos_weight=args.pos_weight,
+    )
+    print(
+        f"Loss config -> BCE:{args.bce_weight}, IoU:{args.iou_weight}, "
+        f"pos_weight:{args.pos_weight}"
+    )
 
     # 가중치 업데이트하는 optimizer 선택함 - Adam은 일반적으로 딥러닝 모델에서 좋은 성능을 보이는 최적화 알고리즘으로, 학습률을 자동으로 조정하여 빠르게 수렴하도록 도와줌
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
