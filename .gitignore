@@ -1,0 +1,51 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build and packaging artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+dev1/
+
+# Conda environments and local env files
+.conda/
+conda-meta/
+.env
+.env.*
+.python-version
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Test and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project outputs (models, predictions, logs)
+outputs/
+
+# Optional local data folders (uncomment if needed)
+# data/
