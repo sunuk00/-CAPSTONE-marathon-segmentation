@@ -18,10 +18,10 @@ num_workers: 0
 
 # Loss
 loss_type: "bce_iou"
-bce_weight: 0.3
-iou_weight: 0.7
+bce_weight: 0.5
+iou_weight: 0.5
 dice_weight: 0.5
-pos_weight: 30.0
+pos_weight: 10.0
 
 # Output
 output_dir: "outputs/deeplabv3_trained"
