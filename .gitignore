@@ -45,7 +45,22 @@ htmlcov/
 Thumbs.db
 
 # Project outputs (models, predictions, logs)
-outputs/
+# Default: ignore everything under outputs
+outputs/**
+
+# Keep only experiment documentation and selected sample predictions
+!outputs/
+!outputs/unet_baseline/
+!outputs/unet_baseline/README.md
+
+# Allow experiment subfolders to be visible, but ignore their contents by default
+!outputs/unet_baseline/*/
+outputs/unet_baseline/*/*
+
+# Keep only first 3 samples (current naming order) from each experiment folder
+!outputs/unet_baseline/*/038_pred.png
+!outputs/unet_baseline/*/039_pred.png
+!outputs/unet_baseline/*/040_pred.png
 
 # Optional local data folders (uncomment if needed)
 # data/
