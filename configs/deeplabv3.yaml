@@ -5,6 +5,7 @@ model_name: "deeplabv3"
 data_root: "data/train"
 image_size: 512
 val_ratio: 0.2
+use_augmentation: false
 
 # Model
 base_channels: 32

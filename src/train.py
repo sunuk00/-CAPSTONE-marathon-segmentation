@@ -46,6 +46,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--data-root", type=str, default="data/train", help="Training data root directory")
     parser.add_argument("--image-size", type=int, default=256, help="Input image size")
     parser.add_argument("--val-ratio", type=float, default=0.2, help="Validation split ratio")
+    parser.add_argument("--use-augmentation", action="store_true", help="Apply basic train-time data augmentation")
     
     # 모델 관련 인자
     parser.add_argument("--model-name", type=str, default="unet", choices=["unet", "resunet", "deeplabv3", "segformer"], help="Model architecture name")
@@ -162,7 +163,12 @@ def main() -> None:
     print(f"Total pairs: {len(pairs)} | Train: {len(train_pairs)} | Val: {len(val_pairs)}")
 
     # 데이터셋 생성
-    train_ds = MarathonSegDataset(train_pairs, image_size=args.image_size, model_name=args.model_name)
+    train_ds = MarathonSegDataset(
+        train_pairs,
+        image_size=args.image_size,
+        model_name=args.model_name,
+        use_augmentation=args.use_augmentation,
+    )
     val_ds = MarathonSegDataset(val_pairs, image_size=args.image_size, model_name=args.model_name)
 
     # DataLoader 생성 - DataLoader는 데이터셋에서 배치 단위로 데이터를 불러오는 역할을 함. 학습 중에 데이터를 섞거나 여러 프로세스를 사용하여 데이터를 불러올 수 있도록 도와줌

@@ -18,6 +18,8 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 
+from .augmentation import apply_basic_augmentation
+
 
 IMAGENET_MEAN = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32).view(3, 1, 1)
 IMAGENET_STD = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32).view(3, 1, 1)
@@ -46,10 +48,17 @@ def apply_model_preprocess(image_tensor: torch.Tensor, model_name: str) -> torch
 
 
 class MarathonSegDataset(Dataset):
-    def __init__(self, pairs: Sequence[Tuple[Path, Path]], image_size: int, model_name: str = "unet") -> None:
+    def __init__(
+        self,
+        pairs: Sequence[Tuple[Path, Path]],
+        image_size: int,
+        model_name: str = "unet",
+        use_augmentation: bool = False,
+    ) -> None:
         self.pairs = list(pairs)
         self.image_size = image_size
         self.model_name = model_name
+        self.use_augmentation = use_augmentation
 
     def __len__(self) -> int:
         return len(self.pairs)
@@ -57,18 +66,19 @@ class MarathonSegDataset(Dataset):
     # 이미지와 마스크를 불러와서 전처리하는 함수
     def __getitem__(self, index: int):
         image_path, mask_path = self.pairs[index]
+        
+        # 이미지와 마스크를 열고, 각각 RGB와 L(단일 채널) 모드로 변환한다.
+        image = Image.open(image_path).convert("RGB")
+        mask = Image.open(mask_path).convert("L")
 
-        # PIL 라이브러리를 사용하여 이미지를 열고, RGB로 변환한 후, 지정된 크기로 조절
+        if self.use_augmentation:
+            image, mask = apply_basic_augmentation(image, mask)
+
         # 이미지 크기 조절 시 BILINEAR 보간법을 사용하여 픽셀 사이를 부드럽게 채움
-        image = Image.open(image_path).convert("RGB").resize(
-            (self.image_size, self.image_size), Image.Resampling.BILINEAR
-        )
+        image = image.resize((self.image_size, self.image_size), Image.Resampling.BILINEAR)
 
-        # 마스크 이미지는 흑백으로 열고, 지정된 크기로 조절
         # 마스크 크기 조절 시 NEAREST(최근접 이웃) 보간법을 사용하여 픽셀 값을 그대로 유지
-        mask = Image.open(mask_path).convert("L").resize(
-            (self.image_size, self.image_size), Image.Resampling.NEAREST
-        )
+        mask = mask.resize((self.image_size, self.image_size), Image.Resampling.NEAREST)
 
         # PIL 이미지를 numpy 배열로 변환
         # 이미지 배열은 0 ~ 255 사이의 픽셀 값을 0.0 ~ 1.0 사이로 정규화

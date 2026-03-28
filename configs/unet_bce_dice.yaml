@@ -5,6 +5,7 @@ model_name: "unet"
 data_root: "data/train"
 image_size: 256
 val_ratio: 0.2
+use_augmentation: false
 
 # Model
 base_channels: 32
