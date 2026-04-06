@@ -85,7 +85,7 @@ skeleton에서 foreground 픽셀을 찾아 각 픽셀을 노드로 만들고, 8-
 
 이 단계의 목적은 분기나 잔가지가 있어도 실제 주행 경로에 해당하는 주 라인을 선택하는 것이다.
 
-![alt text](../../skeleton_graph_example.png)
+<img src="../../skel_to_graph.png" width="500">
 
 ## 가장 긴 경로의 좌표를 (y, x) 리스트로 반환한다.
 가장 긴 경로를 `(y, x)` 좌표 리스트로 반환한다. 이 순서는 numpy 인덱싱과 동일하므로 내부 계산에서 가장 일관적이다.
