@@ -3,7 +3,7 @@ model_name: "unet"
 
 # Data
 data_root: "data/train"
-image_size: 256
+image_size: 512
 val_ratio: 0.2
 use_augmentation: false
 
@@ -25,5 +25,5 @@ dice_weight: 0.5
 pos_weight: 10.0
 
 # Output
-output_dir: "outputs/unet_trained/bce_dice"
+output_dir: "outputs/unet_trained"
 save_interval: 1
